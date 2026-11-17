@@ -1,0 +1,16 @@
+[project]
+name = "midi-ripper"
+version = "0.1.0"
+description = "Convert falling-notes piano videos (screen region or file) into MIDI"
+requires-python = ">=3.10"
+dependencies = ["numpy"]
+
+[project.scripts]
+midi-ripper = "midi_ripper.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["midi_ripper"]
