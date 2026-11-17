@@ -1,6 +1,6 @@
 # midi-ripper
 
-Convert falling-notes piano videos into MIDI.
+Turn falling-notes piano videos (YouTube links, video files or your screen) into MIDI and sheet music.
 
 ## Install
 
