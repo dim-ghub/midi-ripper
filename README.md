@@ -4,7 +4,7 @@ Convert falling-notes piano videos into MIDI.
 
 ## Install
 
-Requires `ffmpeg`, plus `yt-dlp` for links and `slurp` + `wf-recorder` for screen recording (wlroots Wayland only).
+Requires `ffmpeg`, plus `yt-dlp` for links, `musescore` for PDF sheet music, and `slurp` + `wf-recorder` for screen recording (wlroots Wayland only).
 
 ```sh
 uv tool install --editable .
@@ -24,6 +24,12 @@ From a video file:
 midi-ripper video song.mp4
 ```
 
+Sheet music too (works with any command):
+
+```sh
+midi-ripper url 'https://www.youtube.com/watch?v=...' --pdf song.pdf
+```
+
 From the screen (select the keyboard, play the video, Ctrl+C to stop):
 
 ```sh
@@ -35,6 +41,9 @@ midi-ripper record -o song.mid
 | Option | |
 |---|---|
 | `-o FILE` | output file |
+| `--pdf FILE` | sheet music (`.pdf`, or `.musicxml` to edit in MuseScore) |
+| `--swing on/off` | override swing detection for sheet music |
+| `--sheet-bpm N` | approximate tempo, if the sheet music's is off by 2x |
 | `--debug calib.png` | save an image of the detected keys |
 | `--lowest-note A0` | fix the octave if it's wrong |
 | `--white-keys N` | force N white keys if detection fails |

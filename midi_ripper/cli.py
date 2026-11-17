@@ -11,7 +11,7 @@ import tempfile
 
 import numpy as np
 
-from . import capture, detect, keyboard, midi
+from . import capture, detect, keyboard, midi, notation, tempo
 
 
 def _crop(s: str) -> capture.Crop:
@@ -88,6 +88,10 @@ def analyze(path: str, a: argparse.Namespace) -> None:
             n.end -= t0
     midi.write(a.output, notes, bpm=a.bpm, ntracks=ntracks, velocity=a.velocity,
                quantize=a.quantize)
+    if a.pdf:
+        beats = tempo.track_beats([n.start for n in notes], a.sheet_bpm)
+        swing = {"auto": None, "on": True, "off": False}[a.swing]
+        print(notation.write(a.pdf, notes, beats, a.title or "", swing))
     lo, hi = min(n.pitch for n in notes), max(n.pitch for n in notes)
     print(f"{len(notes)} notes, {keyboard.note_name(lo)}..{keyboard.note_name(hi)}, "
           f"{ntracks} track(s), {notes[-1].end:.1f}s -> {a.output}")
@@ -109,6 +113,13 @@ def main(argv=None) -> None:
     g.add_argument("--no-trim", dest="trim", action="store_false",
                    help="keep leading silence (default: first note at --lead-in)")
     g.add_argument("--lead-in", type=float, default=0.5, help="seconds before the first note")
+    g = common.add_argument_group("sheet music")
+    g.add_argument("--pdf", metavar="FILE",
+                   help="also write sheet music (.pdf needs MuseScore, or .musicxml)")
+    g.add_argument("--swing", choices=["auto", "on", "off"], default="auto",
+                   help="write swung 8ths as straight 8ths (default auto)")
+    g.add_argument("--sheet-bpm", type=float, metavar="N",
+                   help="approximate tempo, if the detected one is off by 2x")
     g = common.add_argument_group("keyboard")
     g.add_argument("--lowest-note", help="pitch of the leftmost key, e.g. A0, C2 (default: guess)")
     g.add_argument("--white-keys", type=int, help="force N equally spaced white keys")
@@ -149,12 +160,15 @@ def main(argv=None) -> None:
 
     a = p.parse_args(argv)
     if a.cmd == "video":
-        a.output = a.output or os.path.splitext(os.path.basename(a.file))[0] + ".mid"
+        stem = os.path.splitext(os.path.basename(a.file))[0]
+        a.title = re.sub(r"[_]+", " ", stem)
+        a.output = a.output or stem + ".mid"
         analyze(a.file, a)
         return
     if a.cmd == "url":
         with tempfile.TemporaryDirectory() as d:
             path, title = capture.download(a.url, d)
+            a.title = title
             a.output = a.output or _safe_name(title) + ".mid"
             if a.keep_video:
                 shutil.copyfile(path, a.keep_video)
@@ -162,6 +176,7 @@ def main(argv=None) -> None:
             analyze(path, a)
         return
     a.output = a.output or "out.mid"
+    a.title = ""
 
     a.crop = None
     region = a.region or capture.select_region()
